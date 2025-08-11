@@ -18,7 +18,7 @@
         .secret-admin-trigger {
             position: absolute;
             top: 0;
-            right: 0;
+            left: 0;
             width: 20px;
             height: 20px;
             opacity: 0;
@@ -207,10 +207,11 @@
                 <div>
                     <h4 class="font-semibold mb-4">Company</h4>
                     <ul class="space-y-2 text-sm text-gray-400">
-                        <li><a href="#" class="hover:text-white">About Us</a></li>
-                        <li><a href="#" class="hover:text-white">Contact</a></li>
-                        <li><a href="#" class="hover:text-white">Careers</a></li>
-                        <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
+                        <li><button onclick="showPage('about')" class="hover:text-white text-left">About Us</button></li>
+                        <li><button onclick="showPage('careers')" class="hover:text-white text-left">Careers</button></li>
+                        <li><button onclick="showPage('privacy')" class="hover:text-white text-left">Privacy Policy</button></li>
+                        <li><button onclick="showPage('terms')" class="hover:text-white text-left">Terms & Conditions</button></li>
+                        <li><button onclick="showPage('community')" class="hover:text-white text-left">Community Guidelines</button></li>
                     </ul>
                 </div>
                 <div>
@@ -227,6 +228,30 @@
             </div>
         </div>
     </footer>
+
+    <!-- Static Pages -->
+    <div id="page-overlay" class="fixed inset-0 bg-gray-100 z-50 hidden overflow-y-auto">
+        <!-- Page Header -->
+        <div class="bg-white border-b-2 border-black">
+            <div class="max-w-4xl mx-auto px-4 py-6">
+                <div class="flex justify-between items-center">
+                    <h1 id="page-title" class="font-headline text-4xl font-black text-black">Page Title</h1>
+                    <button onclick="closePage()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div class="max-w-4xl mx-auto px-4 py-8">
+            <div class="bg-white rounded-lg shadow-sm p-8">
+                <div id="page-content" class="prose max-w-none">
+                    <!-- Page content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- User Login Modal -->
     <div id="user-login-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
@@ -390,6 +415,9 @@
                 <button onclick="showUserSection('profile')" class="user-nav-btn w-full text-left px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-900 border-l-4 border-transparent hover:border-blue-500">
                     <i class="fas fa-user mr-3"></i>Profile
                 </button>
+                <button onclick="showUserSection('connections')" class="user-nav-btn w-full text-left px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-900 border-l-4 border-transparent hover:border-blue-500">
+                    <i class="fas fa-users mr-3"></i>Connections
+                </button>
             </nav>
             
             <div class="absolute bottom-0 left-0 right-0 p-6 border-t">
@@ -427,68 +455,213 @@
             <!-- Write Article Section -->
             <div id="user-write-article" class="user-section hidden">
                 <h3 class="text-2xl font-bold text-gray-900 mb-6">Write New Article</h3>
-                <div class="bg-white rounded-lg shadow p-6">
-                    <form id="user-article-form" class="space-y-6">
+                
+                <!-- Permission Check -->
+                <div id="permission-required" class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+                    <div class="flex items-center">
+                        <i class="fas fa-exclamation-triangle text-yellow-600 text-xl mr-3"></i>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
-                            <input type="text" id="user-article-title" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                                <select id="user-article-category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    <option value="politics">Politics</option>
-                                    <option value="business">Business</option>
-                                    <option value="sports">Sports</option>
-                                    <option value="local">Local</option>
-                                    <option value="opinion">Opinion</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
-                                <input type="text" id="user-article-tags" placeholder="Separate tags with commas" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Summary</label>
-                            <textarea id="user-article-summary" rows="3" placeholder="Brief summary of your article..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Content</label>
-                            <textarea id="user-article-content" rows="15" placeholder="Write your article content here..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                        </div>
-                        
-                        <div class="flex space-x-4">
-                            <button type="button" onclick="saveUserArticle('draft')" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 transition duration-200">
-                                <i class="fas fa-save mr-2"></i>Save as Draft
-                            </button>
-                            <button type="button" onclick="saveUserArticle('pending')" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200">
-                                <i class="fas fa-paper-plane mr-2"></i>Submit for Review
+                            <h4 class="text-lg font-semibold text-yellow-800">Permission Required</h4>
+                            <p class="text-yellow-700 mt-1">You need admin approval to create articles. Click below to request permission.</p>
+                            <button onclick="requestCreationPermission()" class="mt-3 bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700">
+                                Request Permission
                             </button>
                         </div>
-                    </form>
+                    </div>
+                </div>
+
+                <div id="article-form-container" class="hidden">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <form id="user-article-form" class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                                <input type="text" id="user-article-title" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                                    <select id="user-article-category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="politics">Politics</option>
+                                        <option value="business">Business</option>
+                                        <option value="sports">Sports</option>
+                                        <option value="local">Local</option>
+                                        <option value="opinion">Opinion</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                                    <input type="text" id="user-article-tags" placeholder="Separate tags with commas" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Summary</label>
+                                <textarea id="user-article-summary" rows="3" placeholder="Brief summary of your article..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Content</label>
+                                <textarea id="user-article-content" rows="15" placeholder="Write your article content here..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                                <p class="text-sm text-gray-500 mt-1">Note: Only admins can add images to articles. Contact admin if you need images included.</p>
+                            </div>
+                            
+                            <div class="flex space-x-4">
+                                <button type="button" onclick="saveUserArticle('draft')" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 transition duration-200">
+                                    <i class="fas fa-save mr-2"></i>Save as Draft
+                                </button>
+                                <button type="button" onclick="saveUserArticle('pending')" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200">
+                                    <i class="fas fa-paper-plane mr-2"></i>Submit for Review
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
 
             <!-- Profile Section -->
             <div id="user-profile" class="user-section hidden">
                 <h3 class="text-2xl font-bold text-gray-900 mb-6">Profile Settings</h3>
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="space-y-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Display Name</label>
-                            <input type="text" id="user-display-name-input" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Profile Info -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h4 class="text-lg font-semibold mb-4">Profile Information</h4>
+                        <div class="space-y-6">
+                            <div class="text-center">
+                                <div class="h-20 w-20 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
+                                    <span id="user-avatar-initials">U</span>
+                                </div>
+                                <div class="flex items-center justify-center">
+                                    <span class="text-lg font-medium" id="profile-display-name">User Name</span>
+                                    <div id="user-verification-badge" class="hidden ml-2">
+                                        <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Display Name</label>
+                                <input type="text" id="user-display-name-input" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+                                <textarea id="user-bio" rows="4" placeholder="Tell us about yourself..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                            </div>
+                            <button onclick="updateUserProfile()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200">
+                                <i class="fas fa-save mr-2"></i>Update Profile
+                            </button>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Bio</label>
-                            <textarea id="user-bio" rows="4" placeholder="Tell us about yourself..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+
+                    <!-- User Stats & Score -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h4 class="text-lg font-semibold mb-4">Your Statistics</h4>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                                <div>
+                                    <p class="text-sm text-gray-600">User Score</p>
+                                    <p class="text-2xl font-bold text-blue-600" id="user-score">75</p>
+                                </div>
+                                <div class="w-16 h-16">
+                                    <div class="relative w-16 h-16">
+                                        <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
+                                            <path class="text-gray-300" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                                            <path class="text-blue-600" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                                        </svg>
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <span class="text-sm font-bold text-blue-600">75%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="text-center p-3 bg-green-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-green-600">8</p>
+                                    <p class="text-sm text-gray-600">Articles Published</p>
+                                </div>
+                                <div class="text-center p-3 bg-purple-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-purple-600">156</p>
+                                    <p class="text-sm text-gray-600">Total Views</p>
+                                </div>
+                            </div>
                         </div>
-                        <button onclick="updateUserProfile()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200">
-                            <i class="fas fa-save mr-2"></i>Update Profile
-                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Connections Section -->
+            <div id="user-connections" class="user-section hidden">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6">Connect with Other Users</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Other Users -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h4 class="text-lg font-semibold mb-4">Other Writers</h4>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 border rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="h-12 w-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold mr-4">JD</div>
+                                    <div>
+                                        <div class="flex items-center">
+                                            <p class="font-medium">John Doe</p>
+                                            <svg class="w-4 h-4 ml-1 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                            </svg>
+                                        </div>
+                                        <p class="text-sm text-gray-600">Score: 85 • 12 articles</p>
+                                    </div>
+                                </div>
+                                <button onclick="viewOtherUserProfile('user1')" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm">
+                                    View Profile
+                                </button>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 border rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="h-12 w-12 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold mr-4">JS</div>
+                                    <div>
+                                        <p class="font-medium">Jane Smith</p>
+                                        <p class="text-sm text-gray-600">Score: 42 • 3 articles</p>
+                                    </div>
+                                </div>
+                                <button onclick="viewOtherUserProfile('user2')" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm">
+                                    View Profile
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h4 class="text-lg font-semibold mb-4">Top Writers</h4>
+                        <div class="space-y-3">
+                            <div class="flex items-center p-3 bg-yellow-50 rounded-lg">
+                                <div class="flex items-center justify-center w-8 h-8 bg-yellow-500 text-white rounded-full text-sm font-bold mr-3">1</div>
+                                <div class="flex-1">
+                                    <p class="font-medium">John Doe</p>
+                                    <p class="text-sm text-gray-600">Score: 85</p>
+                                </div>
+                                <i class="fas fa-crown text-yellow-500"></i>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center justify-center w-8 h-8 bg-gray-500 text-white rounded-full text-sm font-bold mr-3">2</div>
+                                <div class="flex-1">
+                                    <p class="font-medium">You</p>
+                                    <p class="text-sm text-gray-600">Score: 75</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center p-3 bg-orange-50 rounded-lg">
+                                <div class="flex items-center justify-center w-8 h-8 bg-orange-500 text-white rounded-full text-sm font-bold mr-3">3</div>
+                                <div class="flex-1">
+                                    <p class="font-medium">Jane Smith</p>
+                                    <p class="text-sm text-gray-600">Score: 42</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -508,6 +681,12 @@
                 <button onclick="showAdminSection('dashboard')" class="admin-nav-btn w-full text-left px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-900 border-l-4 border-transparent hover:border-blue-500">
                     <i class="fas fa-tachometer-alt mr-3"></i>Dashboard
                 </button>
+                <button onclick="showAdminSection('site-settings')" class="admin-nav-btn w-full text-left px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-900 border-l-4 border-transparent hover:border-blue-500">
+                    <i class="fas fa-cog mr-3"></i>Site Settings
+                </button>
+                <button onclick="showAdminSection('featured-posts')" class="admin-nav-btn w-full text-left px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-900 border-l-4 border-transparent hover:border-blue-500">
+                    <i class="fas fa-star mr-3"></i>Featured Posts
+                </button>
                 <button onclick="showAdminSection('pending-articles')" class="admin-nav-btn w-full text-left px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-900 border-l-4 border-transparent hover:border-blue-500">
                     <i class="fas fa-clock mr-3"></i>Pending Articles
                     <span id="pending-count" class="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">0</span>
@@ -516,10 +695,13 @@
                     <i class="fas fa-newspaper mr-3"></i>All Articles
                 </button>
                 <button onclick="showAdminSection('users')" class="admin-nav-btn w-full text-left px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-900 border-l-4 border-transparent hover:border-blue-500">
-                    <i class="fas fa-users mr-3"></i>Users
+                    <i class="fas fa-users mr-3"></i>User Management
                 </button>
-                <button onclick="showAdminSection('settings')" class="admin-nav-btn w-full text-left px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-900 border-l-4 border-transparent hover:border-blue-500">
-                    <i class="fas fa-cog mr-3"></i>Settings
+                <button onclick="showAdminSection('user-activity')" class="admin-nav-btn w-full text-left px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-900 border-l-4 border-transparent hover:border-blue-500">
+                    <i class="fas fa-chart-line mr-3"></i>User Activity
+                </button>
+                <button onclick="showAdminSection('permissions')" class="admin-nav-btn w-full text-left px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-900 border-l-4 border-transparent hover:border-blue-500">
+                    <i class="fas fa-shield-alt mr-3"></i>Permissions
                 </button>
             </nav>
             
@@ -632,25 +814,289 @@
                     <table class="w-full">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Articles</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="users-table" class="bg-white divide-y divide-gray-200">
-                            <!-- Users will be loaded here -->
+                            <tr>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">JD</div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900 flex items-center">
+                                                John Doe
+                                                <svg class="w-4 h-4 ml-1 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                                </svg>
+                                            </div>
+                                            <div class="text-sm text-gray-500">john@example.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div class="flex items-center">
+                                        <span class="font-bold text-lg">85</span>
+                                        <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                                            <div class="bg-blue-600 h-2 rounded-full" style="width: 85%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">12</td>
+                                <td class="px-6 py-4 text-sm font-medium space-x-2">
+                                    <button onclick="viewUserProfile('user1')" class="text-blue-600 hover:text-blue-900">View</button>
+                                    <button onclick="toggleUserVerification('user1')" class="text-green-600 hover:text-green-900">Verify</button>
+                                    <button onclick="suspendUser('user1')" class="text-red-600 hover:text-red-900">Suspend</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <div class="h-10 w-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold">JS</div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">Jane Smith</div>
+                                            <div class="text-sm text-gray-500">jane@example.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Suspended</span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div class="flex items-center">
+                                        <span class="font-bold text-lg">42</span>
+                                        <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                                            <div class="bg-yellow-600 h-2 rounded-full" style="width: 42%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">3</td>
+                                <td class="px-6 py-4 text-sm font-medium space-x-2">
+                                    <button onclick="viewUserProfile('user2')" class="text-blue-600 hover:text-blue-900">View</button>
+                                    <button onclick="unsuspendUser('user2')" class="text-green-600 hover:text-green-900">Unsuspend</button>
+                                    <button onclick="deleteUser('user2')" class="text-red-600 hover:text-red-900">Delete</button>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Settings Section -->
-            <div id="admin-settings" class="admin-section hidden">
+            <!-- Site Settings Section -->
+            <div id="admin-site-settings" class="admin-section hidden">
                 <h3 class="text-2xl font-bold text-gray-900 mb-6">Site Settings</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Logo & Branding -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h4 class="text-lg font-semibold mb-4">Logo & Branding</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Site Title</label>
+                                <input type="text" id="site-title" value="Dozera News" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Site Tagline</label>
+                                <input type="text" id="site-tagline" value="New York's Premier News Source" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Logo URL</label>
+                                <input type="url" id="site-logo" placeholder="https://example.com/logo.png" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            </div>
+                            <button onclick="updateSiteSettings()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Update Branding</button>
+                        </div>
+                    </div>
+
+                    <!-- Menu Settings -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h4 class="text-lg font-semibold mb-4">Navigation Menu</h4>
+                        <div id="menu-items" class="space-y-3">
+                            <div class="flex items-center space-x-3 p-3 border rounded">
+                                <input type="text" value="Home" class="flex-1 px-2 py-1 border rounded">
+                                <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                            </div>
+                            <div class="flex items-center space-x-3 p-3 border rounded">
+                                <input type="text" value="Politics" class="flex-1 px-2 py-1 border rounded">
+                                <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                            </div>
+                            <div class="flex items-center space-x-3 p-3 border rounded">
+                                <input type="text" value="Business" class="flex-1 px-2 py-1 border rounded">
+                                <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <button onclick="addMenuItem()" class="mt-3 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">Add Menu Item</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Featured Posts Section -->
+            <div id="admin-featured-posts" class="admin-section hidden">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6">Featured Posts Management</h3>
                 <div class="bg-white rounded-lg shadow p-6">
-                    <p class="text-gray-600">Site configuration options coming soon...</p>
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold mb-4">Current Featured Post</h4>
+                        <div id="current-featured" class="border rounded-lg p-4 bg-yellow-50">
+                            <h5 class="font-medium">NYC Mayor Announces Comprehensive Infrastructure Overhaul</h5>
+                            <p class="text-sm text-gray-600 mt-1">By Sarah Johnson • Politics</p>
+                            <button onclick="removeFeatured()" class="mt-2 text-red-600 hover:text-red-800 text-sm">Remove from Featured</button>
+                        </div>
+                    </div>
+                    
+                    <h4 class="text-lg font-semibold mb-4">Select New Featured Post</h4>
+                    <div class="space-y-3" id="featured-candidates">
+                        <!-- Articles will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Activity Section -->
+            <div id="admin-user-activity" class="admin-section hidden">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6">User Activity Tracking</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h4 class="text-lg font-semibold mb-2">Active Users (24h)</h4>
+                        <p class="text-3xl font-bold text-blue-600">127</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h4 class="text-lg font-semibold mb-2">Articles Read</h4>
+                        <p class="text-3xl font-bold text-green-600">1,234</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h4 class="text-lg font-semibold mb-2">User Interactions</h4>
+                        <p class="text-3xl font-bold text-purple-600">456</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="px-6 py-4 border-b">
+                        <h4 class="text-lg font-semibold">Recent User Activity</h4>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activity-log" class="divide-y divide-gray-200">
+                                <!-- Activity will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Permissions Section -->
+            <div id="admin-permissions" class="admin-section hidden">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6">User Permissions & Requests</h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Article Creation Requests -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h4 class="text-lg font-semibold mb-4">Article Creation Requests</h4>
+                        <div class="space-y-3" id="creation-requests">
+                            <div class="border rounded-lg p-4">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="font-medium">John Doe</p>
+                                        <p class="text-sm text-gray-600">Wants to create articles</p>
+                                        <p class="text-xs text-gray-500">Requested 2 hours ago</p>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button onclick="approveCreationRequest('user1')" class="bg-green-600 text-white px-3 py-1 rounded text-sm">Approve</button>
+                                        <button onclick="denyCreationRequest('user1')" class="bg-red-600 text-white px-3 py-1 rounded text-sm">Deny</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edit Requests -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h4 class="text-lg font-semibold mb-4">Edit Permission Requests</h4>
+                        <div class="space-y-3" id="edit-requests">
+                            <div class="border rounded-lg p-4">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="font-medium">Jane Smith</p>
+                                        <p class="text-sm text-gray-600">Wants to edit: "NYC Infrastructure Plan"</p>
+                                        <p class="text-xs text-gray-500">Requested 1 hour ago</p>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button onclick="approveEditRequest('edit1')" class="bg-green-600 text-white px-3 py-1 rounded text-sm">Approve</button>
+                                        <button onclick="denyEditRequest('edit1')" class="bg-red-600 text-white px-3 py-1 rounded text-sm">Deny</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Admin Article Editor -->
+                <div class="mt-6 bg-white rounded-lg shadow p-6">
+                    <h4 class="text-lg font-semibold mb-4">Admin Article Editor</h4>
+                    <p class="text-sm text-gray-600 mb-4">As admin, you can create articles with images and full editing capabilities.</p>
+                    
+                    <form class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                                <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                    <option value="politics">Politics</option>
+                                    <option value="business">Business</option>
+                                    <option value="sports">Sports</option>
+                                    <option value="local">Local</option>
+                                    <option value="breaking">Breaking News</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Featured Image URL</label>
+                            <input type="url" placeholder="https://example.com/image.jpg" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            <p class="text-xs text-gray-500 mt-1">Admin privilege: Add images via URL</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Summary</label>
+                            <textarea rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                            <textarea rows="8" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <button type="button" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">
+                                Publish Immediately
+                            </button>
+                            <button type="button" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700">
+                                Save as Draft
+                            </button>
+                            <button type="button" class="bg-yellow-600 text-white px-6 py-2 rounded-md hover:bg-yellow-700">
+                                Set as Featured
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -746,8 +1192,16 @@
         function verifyAccessCode() {
             const code = document.getElementById('access-code').value;
             if (code === '20060202') {
-                document.getElementById('access-code-step').classList.add('hidden');
-                document.getElementById('admin-auth-providers-step').classList.remove('hidden');
+                // Direct admin access without authentication
+                isAdmin = true;
+                currentUser = { uid: 'admin', displayName: 'Administrator', email: 'admin@dozeranews.com' };
+                closeAdminModal();
+                showAdminPanel();
+                
+                // Update UI
+                document.getElementById('user-auth-section').classList.add('hidden');
+                document.getElementById('user-logged-in-section').classList.remove('hidden');
+                document.getElementById('user-display-name').textContent = 'Administrator';
             } else {
                 alert('Invalid access code');
             }
@@ -1184,6 +1638,8 @@
             loadPendingArticles();
             loadAllArticlesAdmin();
             updateAdminStats();
+            loadFeaturedCandidates();
+            loadUserActivity();
         }
 
         function loadPendingArticles() {
@@ -1394,6 +1850,476 @@
 
         // Initialize with sample data
         allArticles = [...sampleNews];
+        
+        // Global variables for admin features
+        let siteSettings = {
+            title: 'Dozera News',
+            tagline: 'New York\'s Premier News Source',
+            logo: ''
+        };
+        
+        let userPermissions = {
+            canCreateArticles: false,
+            canEditArticles: false,
+            isVerified: false
+        };
+        
+        let activityLog = [
+            { user: 'John Doe', action: 'Published article', time: '2 hours ago', ip: '192.168.1.1' },
+            { user: 'Jane Smith', action: 'Logged in', time: '3 hours ago', ip: '192.168.1.2' },
+            { user: 'Admin', action: 'Approved article', time: '4 hours ago', ip: '192.168.1.100' }
+        ];
+
+        // Admin Functions
+        function updateSiteSettings() {
+            const title = document.getElementById('site-title').value;
+            const tagline = document.getElementById('site-tagline').value;
+            const logo = document.getElementById('site-logo').value;
+            
+            siteSettings = { title, tagline, logo };
+            
+            // Update header
+            document.querySelector('header h1').textContent = title;
+            document.querySelector('header p').textContent = tagline;
+            
+            if (logo) {
+                const headerTitle = document.querySelector('header h1');
+                headerTitle.innerHTML = `<img src="${logo}" alt="${title}" class="h-16 mx-auto mb-2" onerror="this.style.display='none'"> ${title}`;
+            }
+            
+            alert('Site settings updated successfully!');
+        }
+
+        function addMenuItem() {
+            const menuContainer = document.getElementById('menu-items');
+            const newItem = document.createElement('div');
+            newItem.className = 'flex items-center space-x-3 p-3 border rounded';
+            newItem.innerHTML = `
+                <input type="text" placeholder="Menu Item" class="flex-1 px-2 py-1 border rounded">
+                <button onclick="this.parentElement.remove()" class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+            `;
+            menuContainer.appendChild(newItem);
+        }
+
+        function loadFeaturedCandidates() {
+            const container = document.getElementById('featured-candidates');
+            container.innerHTML = '';
+            
+            const publishedArticles = allArticles.filter(a => a.status === 'published');
+            publishedArticles.forEach(article => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50';
+                div.innerHTML = `
+                    <div>
+                        <h5 class="font-medium">${article.title}</h5>
+                        <p class="text-sm text-gray-600">By ${article.author} • ${article.category}</p>
+                    </div>
+                    <button onclick="setFeatured('${article.id}')" class="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700">
+                        Set as Featured
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function setFeatured(articleId) {
+            const article = allArticles.find(a => a.id === articleId);
+            if (article) {
+                document.getElementById('current-featured').innerHTML = `
+                    <h5 class="font-medium">${article.title}</h5>
+                    <p class="text-sm text-gray-600 mt-1">By ${article.author} • ${article.category}</p>
+                    <button onclick="removeFeatured()" class="mt-2 text-red-600 hover:text-red-800 text-sm">Remove from Featured</button>
+                `;
+                alert('Featured post updated!');
+            }
+        }
+
+        function removeFeatured() {
+            document.getElementById('current-featured').innerHTML = `
+                <p class="text-gray-500">No featured post selected</p>
+            `;
+        }
+
+        function loadUserActivity() {
+            const tbody = document.getElementById('activity-log');
+            tbody.innerHTML = '';
+            
+            activityLog.forEach(log => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-sm text-gray-900">${log.user}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${log.action}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${log.time}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${log.ip}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function approveCreationRequest(userId) {
+            userPermissions.canCreateArticles = true;
+            document.getElementById('permission-required').classList.add('hidden');
+            document.getElementById('article-form-container').classList.remove('hidden');
+            alert('Article creation permission granted!');
+        }
+
+        function denyCreationRequest(userId) {
+            alert('Article creation request denied.');
+        }
+
+        function approveEditRequest(requestId) {
+            alert('Edit permission granted!');
+        }
+
+        function denyEditRequest(requestId) {
+            alert('Edit request denied.');
+        }
+
+        function viewUserProfile(userId) {
+            alert('Viewing user profile for: ' + userId);
+        }
+
+        function toggleUserVerification(userId) {
+            alert('User verification status toggled for: ' + userId);
+        }
+
+        function suspendUser(userId) {
+            if (confirm('Are you sure you want to suspend this user?')) {
+                alert('User suspended: ' + userId);
+            }
+        }
+
+        function unsuspendUser(userId) {
+            alert('User unsuspended: ' + userId);
+        }
+
+        function deleteUser(userId) {
+            if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+                alert('User deleted: ' + userId);
+            }
+        }
+
+        // User Functions
+        function requestCreationPermission() {
+            alert('Permission request sent to admin. You will be notified once approved.');
+            // In real app, this would send a request to admin
+        }
+
+        function viewOtherUserProfile(userId) {
+            // Create modal to show other user's profile
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg max-w-2xl w-full p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-bold">User Profile</h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="text-center mb-6">
+                        <div class="h-20 w-20 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
+                            JD
+                        </div>
+                        <div class="flex items-center justify-center">
+                            <h4 class="text-xl font-bold">John Doe</h4>
+                            <svg class="w-5 h-5 ml-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <p class="text-gray-600 mt-2">Verified Writer</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <p class="text-2xl font-bold text-blue-600">85</p>
+                            <p class="text-sm text-gray-600">Score</p>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <p class="text-2xl font-bold text-green-600">12</p>
+                            <p class="text-sm text-gray-600">Articles</p>
+                        </div>
+                        <div class="text-center p-4 bg-purple-50 rounded-lg">
+                            <p class="text-2xl font-bold text-purple-600">1.2K</p>
+                            <p class="text-sm text-gray-600">Views</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h5 class="font-semibold mb-2">Bio</h5>
+                        <p class="text-gray-700">Experienced journalist covering NYC politics and local news. Passionate about community stories and investigative reporting.</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Page Content Data
+        const pageContent = {
+            about: {
+                title: "About Dozera News",
+                content: `
+                    <h2>Our Mission</h2>
+                    <p>Dozera News is New York's premier digital news source, committed to delivering accurate, timely, and comprehensive coverage of the stories that matter most to our community.</p>
+                    
+                    <h2>Our Story</h2>
+                    <p>Founded in 2024, Dozera News emerged from a vision to create a modern, accessible platform for quality journalism. We believe in the power of informed communities and the vital role that local news plays in democracy.</p>
+                    
+                    <h2>Our Values</h2>
+                    <ul>
+                        <li><strong>Accuracy:</strong> We verify our sources and fact-check our stories</li>
+                        <li><strong>Transparency:</strong> We clearly identify our sources and methods</li>
+                        <li><strong>Independence:</strong> We maintain editorial independence from political and commercial interests</li>
+                        <li><strong>Community:</strong> We serve the diverse communities of New York City</li>
+                    </ul>
+                    
+                    <h2>Our Team</h2>
+                    <p>Our newsroom is staffed by experienced journalists, editors, and digital media professionals who are passionate about serving our readers with excellence.</p>
+                    
+                    <h2>Contact Us</h2>
+                    <p>Have a story tip or feedback? Reach out to us:</p>
+                    <ul>
+                        <li>Email: news@dozeranews.com</li>
+                        <li>Phone: (212) 555-NEWS</li>
+                        <li>Address: 123 News Plaza, New York, NY 10001</li>
+                    </ul>
+                `
+            },
+            careers: {
+                title: "Careers at Dozera News",
+                content: `
+                    <h2>Join Our Team</h2>
+                    <p>At Dozera News, we're always looking for talented individuals who share our passion for quality journalism and community service.</p>
+                    
+                    <h2>Current Openings</h2>
+                    
+                    <h3>Senior Reporter - Politics</h3>
+                    <p><strong>Location:</strong> New York, NY<br>
+                    <strong>Type:</strong> Full-time</p>
+                    <p>We're seeking an experienced political reporter to cover NYC politics, including City Hall, state legislature, and federal representation.</p>
+                    <ul>
+                        <li>5+ years of political reporting experience</li>
+                        <li>Strong writing and investigative skills</li>
+                        <li>Established source network in NYC politics</li>
+                    </ul>
+                    
+                    <h3>Digital Content Editor</h3>
+                    <p><strong>Location:</strong> New York, NY<br>
+                    <strong>Type:</strong> Full-time</p>
+                    <p>Join our digital team to help shape our online presence and social media strategy.</p>
+                    <ul>
+                        <li>3+ years of digital media experience</li>
+                        <li>SEO and social media expertise</li>
+                        <li>Experience with CMS platforms</li>
+                    </ul>
+                    
+                    <h3>Freelance Contributors</h3>
+                    <p><strong>Location:</strong> Remote/NYC<br>
+                    <strong>Type:</strong> Contract</p>
+                    <p>We welcome pitches from freelance writers covering local news, sports, culture, and business.</p>
+                    
+                    <h2>Benefits</h2>
+                    <ul>
+                        <li>Competitive salary and benefits package</li>
+                        <li>Health, dental, and vision insurance</li>
+                        <li>401(k) with company matching</li>
+                        <li>Professional development opportunities</li>
+                        <li>Flexible work arrangements</li>
+                    </ul>
+                    
+                    <h2>How to Apply</h2>
+                    <p>Send your resume, cover letter, and portfolio to <strong>careers@dozeranews.com</strong></p>
+                    <p>We are an equal opportunity employer committed to diversity and inclusion.</p>
+                `
+            },
+            privacy: {
+                title: "Privacy Policy",
+                content: `
+                    <p><strong>Last Updated:</strong> December 2024</p>
+                    
+                    <h2>Information We Collect</h2>
+                    <p>We collect information you provide directly to us, such as when you:</p>
+                    <ul>
+                        <li>Create an account or subscribe to our newsletter</li>
+                        <li>Submit articles or comments</li>
+                        <li>Contact us with questions or feedback</li>
+                        <li>Participate in surveys or promotions</li>
+                    </ul>
+                    
+                    <h2>How We Use Your Information</h2>
+                    <p>We use the information we collect to:</p>
+                    <ul>
+                        <li>Provide, maintain, and improve our services</li>
+                        <li>Send you newsletters and updates</li>
+                        <li>Respond to your comments and questions</li>
+                        <li>Analyze usage patterns to improve user experience</li>
+                    </ul>
+                    
+                    <h2>Information Sharing</h2>
+                    <p>We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except:</p>
+                    <ul>
+                        <li>To comply with legal obligations</li>
+                        <li>To protect our rights and safety</li>
+                        <li>With service providers who assist our operations</li>
+                    </ul>
+                    
+                    <h2>Data Security</h2>
+                    <p>We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.</p>
+                    
+                    <h2>Cookies and Tracking</h2>
+                    <p>We use cookies and similar technologies to enhance your browsing experience and analyze site traffic. You can control cookie settings through your browser.</p>
+                    
+                    <h2>Your Rights</h2>
+                    <p>You have the right to:</p>
+                    <ul>
+                        <li>Access and update your personal information</li>
+                        <li>Delete your account and associated data</li>
+                        <li>Opt out of marketing communications</li>
+                        <li>Request a copy of your data</li>
+                    </ul>
+                    
+                    <h2>Contact Us</h2>
+                    <p>If you have questions about this Privacy Policy, contact us at <strong>privacy@dozeranews.com</strong></p>
+                `
+            },
+            terms: {
+                title: "Terms & Conditions",
+                content: `
+                    <p><strong>Last Updated:</strong> December 2024</p>
+                    
+                    <h2>Acceptance of Terms</h2>
+                    <p>By accessing and using Dozera News, you accept and agree to be bound by the terms and provision of this agreement.</p>
+                    
+                    <h2>Use License</h2>
+                    <p>Permission is granted to temporarily download one copy of the materials on Dozera News for personal, non-commercial transitory viewing only.</p>
+                    
+                    <h2>User Accounts</h2>
+                    <p>When you create an account with us, you must provide accurate and complete information. You are responsible for:</p>
+                    <ul>
+                        <li>Maintaining the confidentiality of your account</li>
+                        <li>All activities that occur under your account</li>
+                        <li>Notifying us of any unauthorized use</li>
+                    </ul>
+                    
+                    <h2>Content Submission</h2>
+                    <p>By submitting content to Dozera News, you grant us:</p>
+                    <ul>
+                        <li>A non-exclusive license to use, modify, and publish your content</li>
+                        <li>The right to edit content for clarity and accuracy</li>
+                        <li>The right to remove content that violates our guidelines</li>
+                    </ul>
+                    
+                    <h2>Prohibited Uses</h2>
+                    <p>You may not use our service:</p>
+                    <ul>
+                        <li>For any unlawful purpose or to solicit unlawful acts</li>
+                        <li>To violate any international, federal, provincial, or state regulations or laws</li>
+                        <li>To transmit or procure the sending of any advertising or promotional material</li>
+                        <li>To impersonate or attempt to impersonate the company, employees, or other users</li>
+                    </ul>
+                    
+                    <h2>Disclaimer</h2>
+                    <p>The information on this website is provided on an 'as is' basis. To the fullest extent permitted by law, this Company excludes all representations, warranties, conditions and terms.</p>
+                    
+                    <h2>Limitation of Liability</h2>
+                    <p>In no event shall Dozera News or its suppliers be liable for any damages arising out of the use or inability to use the materials on our website.</p>
+                    
+                    <h2>Governing Law</h2>
+                    <p>These terms and conditions are governed by and construed in accordance with the laws of New York State.</p>
+                    
+                    <h2>Contact Information</h2>
+                    <p>Questions about the Terms of Service should be sent to us at <strong>legal@dozeranews.com</strong></p>
+                `
+            },
+            community: {
+                title: "Community Guidelines",
+                content: `
+                    <h2>Our Community Standards</h2>
+                    <p>Dozera News is committed to fostering a respectful, inclusive, and constructive community for all users. These guidelines help ensure our platform remains a safe space for meaningful dialogue.</p>
+                    
+                    <h2>Respectful Communication</h2>
+                    <ul>
+                        <li>Treat all community members with respect and courtesy</li>
+                        <li>Engage in constructive dialogue, even when disagreeing</li>
+                        <li>Avoid personal attacks, harassment, or bullying</li>
+                        <li>Respect diverse viewpoints and backgrounds</li>
+                    </ul>
+                    
+                    <h2>Content Standards</h2>
+                    <h3>Acceptable Content:</h3>
+                    <ul>
+                        <li>Factual, well-researched articles and comments</li>
+                        <li>Constructive criticism and feedback</li>
+                        <li>Relevant news tips and story suggestions</li>
+                        <li>Educational and informative discussions</li>
+                    </ul>
+                    
+                    <h3>Prohibited Content:</h3>
+                    <ul>
+                        <li>Hate speech, discrimination, or harassment</li>
+                        <li>False information or deliberate misinformation</li>
+                        <li>Spam, promotional content, or advertising</li>
+                        <li>Content that violates privacy or copyright</li>
+                        <li>Threats, violence, or illegal activities</li>
+                        <li>Adult content or material harmful to minors</li>
+                    </ul>
+                    
+                    <h2>Article Submission Guidelines</h2>
+                    <ul>
+                        <li>Submit original content only</li>
+                        <li>Verify facts and cite credible sources</li>
+                        <li>Write clear, engaging headlines</li>
+                        <li>Include relevant tags and categories</li>
+                        <li>Proofread for grammar and spelling</li>
+                    </ul>
+                    
+                    <h2>Moderation Policy</h2>
+                    <p>Our moderation team reviews content to ensure compliance with these guidelines. We may:</p>
+                    <ul>
+                        <li>Remove content that violates our guidelines</li>
+                        <li>Request revisions before publication</li>
+                        <li>Suspend or ban accounts for repeated violations</li>
+                        <li>Report illegal activities to appropriate authorities</li>
+                    </ul>
+                    
+                    <h2>Reporting Violations</h2>
+                    <p>If you encounter content that violates these guidelines:</p>
+                    <ul>
+                        <li>Use the report function on the specific content</li>
+                        <li>Email us at <strong>community@dozeranews.com</strong></li>
+                        <li>Provide specific details about the violation</li>
+                    </ul>
+                    
+                    <h2>Appeals Process</h2>
+                    <p>If you believe your content was incorrectly removed or your account was unfairly suspended:</p>
+                    <ul>
+                        <li>Contact us at <strong>appeals@dozeranews.com</strong></li>
+                        <li>Include your username and details of the action</li>
+                        <li>Explain why you believe the action was incorrect</li>
+                    </ul>
+                    
+                    <h2>Updates to Guidelines</h2>
+                    <p>These guidelines may be updated periodically. Continued use of our platform constitutes acceptance of any changes.</p>
+                    
+                    <p><strong>Remember:</strong> Building a positive community is everyone's responsibility. Thank you for helping make Dozera News a welcoming place for all.</p>
+                `
+            }
+        };
+
+        // Page Functions
+        function showPage(pageId) {
+            const page = pageContent[pageId];
+            if (!page) return;
+            
+            document.getElementById('page-title').textContent = page.title;
+            document.getElementById('page-content').innerHTML = page.content;
+            document.getElementById('page-overlay').classList.remove('hidden');
+        }
+
+        function closePage() {
+            document.getElementById('page-overlay').classList.add('hidden');
+        }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96d4ba70521191cd',t:'MTc1NDg4MzgwMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96d4da96a14d5a0b',t:'MTc1NDg4NTExOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
