@@ -731,62 +731,11 @@
             isSuspended: false
         };
 
-        // Sample data
-        const sampleArticles = [
-            {
-                id: '1',
-                title: 'NYC Infrastructure Bill Passes State Senate',
-                summary: 'A comprehensive $50 billion plan to modernize the city\'s infrastructure over the next decade.',
-                content: 'New York City Mayor announced today a groundbreaking $50 billion infrastructure plan that will transform the city\'s transportation, utilities, and digital infrastructure over the next decade. The plan includes major upgrades to the subway system, expansion of bike lanes, and implementation of smart city technologies.\n\nThe initiative, dubbed "NYC Forward," will focus on sustainability and resilience, ensuring the city is prepared for future challenges including climate change and population growth.',
-                category: 'politics',
-                date: new Date().toISOString(),
-                featured: true,
-                breaking: false,
-                status: 'published',
-                author: 'Sarah Johnson',
-                authorId: 'sample-author-1',
-                imageUrl: '',
-                slug: 'nyc-infrastructure-bill-passes-state-senate'
-            },
-            {
-                id: '2',
-                title: 'Wall Street Sees Record Trading Volume',
-                summary: 'Stock exchanges report highest daily trading volume in over a decade.',
-                content: 'Wall Street experienced unprecedented trading activity yesterday as major stock exchanges reported their highest daily trading volumes in over a decade. The surge was driven by a combination of earnings reports, economic data releases, and increased retail investor participation.',
-                category: 'business',
-                date: new Date(Date.now() - 86400000).toISOString(),
-                featured: true,
-                breaking: false,
-                status: 'published',
-                author: 'Michael Chen',
-                authorId: 'sample-author-2',
-                imageUrl: '',
-                slug: 'wall-street-sees-record-trading-volume'
-            }
-        ];
-
-        const sampleUsers = [
-            {
-                id: 'sample-author-1',
-                email: 'sarah@example.com',
-                displayName: 'Sarah Johnson',
-                score: 850,
-                isVerified: true,
-                status: 'active',
-                joinDate: new Date(Date.now() - 86400000 * 30).toISOString(),
-                permissions: { canCreateArticles: true, canEditArticles: true }
-            },
-            {
-                id: 'sample-author-2',
-                email: 'michael@example.com',
-                displayName: 'Michael Chen',
-                score: 720,
-                isVerified: false,
-                status: 'active',
-                joinDate: new Date(Date.now() - 86400000 * 15).toISOString(),
-                permissions: { canCreateArticles: true, canEditArticles: false }
-            }
-        ];
+        // Global data arrays (will be populated from Firestore)
+        let newsArticles = [];
+        let allUsers = [];
+        let userPermissions = {};
+        let pendingRequests = [];
 
         const staticPages = {
             about: {
@@ -870,8 +819,7 @@
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
-            loadSampleData();
-            loadFeaturedArticles();
+            loadFirestoreData();
             updateURL();
             
             // Auth state observer
@@ -880,6 +828,7 @@
                 if (user) {
                     checkUserPermissions(user);
                     updateUserUI();
+                    loadUserSpecificData();
                 } else {
                     resetUserUI();
                 }
@@ -1049,6 +998,58 @@
             }
         }
 
+        // Firestore data loading functions
+        async function loadFirestoreData() {
+            try {
+                showLoading();
+                
+                // Load published news articles
+                const newsSnapshot = await db.collection('news')
+                    .where('status', '==', 'published')
+                    .orderBy('date', 'desc')
+                    .get();
+                
+                newsArticles = newsSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                // Load users (public data only)
+                const usersSnapshot = await db.collection('users').get();
+                allUsers = usersSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                // Load initial content
+                loadFeaturedArticles();
+                loadLatestArticles();
+                
+                hideLoading();
+            } catch (error) {
+                console.error('Error loading Firestore data:', error);
+                hideLoading();
+                showCustomAlert('Error loading data. Please refresh the page.', 'error');
+            }
+        }
+
+        async function loadUserSpecificData() {
+            if (!currentUser) return;
+            
+            try {
+                // Load pending articles if admin
+                if (isAdmin) {
+                    const pendingSnapshot = await db.collection('pendingArticles').get();
+                    pendingRequests = pendingSnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                }
+            } catch (error) {
+                console.error('Error loading user-specific data:', error);
+            }
+        }
+
         async function createUserProfile(user) {
             try {
                 const userProfile = {
@@ -1057,14 +1058,18 @@
                     score: 100,
                     isVerified: false,
                     status: 'active',
-                    joinDate: firebase.firestore.FieldValue.serverTimestamp(),
-                    permissions: {
-                        canCreateArticles: false,
-                        canEditArticles: false
-                    }
+                    joinDate: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
                 await db.collection('users').doc(user.uid).set(userProfile, { merge: true });
+                
+                // Create permissions document
+                await db.collection('permissions').doc(user.uid).set({
+                    canCreateArticles: false,
+                    canEditArticles: false,
+                    isSuspended: false
+                });
+                
             } catch (error) {
                 console.error('Error creating user profile:', error);
             }
@@ -1072,16 +1077,36 @@
 
         async function checkUserPermissions(user) {
             try {
+                // Check if user has admin custom claim
+                const idTokenResult = await user.getIdTokenResult();
+                if (idTokenResult.claims.admin) {
+                    setAdminStatus(true);
+                }
+                
+                // Load user permissions
+                const permissionsDoc = await db.collection('permissions').doc(user.uid).get();
+                if (permissionsDoc.exists) {
+                    userPermissions = permissionsDoc.data();
+                } else {
+                    // Create default permissions if they don't exist
+                    userPermissions = {
+                        canCreateArticles: false,
+                        canEditArticles: false,
+                        isSuspended: false
+                    };
+                    await db.collection('permissions').doc(user.uid).set(userPermissions);
+                }
+                
+                // Load user profile data
                 const userDoc = await db.collection('users').doc(user.uid).get();
                 if (userDoc.exists) {
                     const userData = userDoc.data();
-                    userPermissions = userData.permissions || userPermissions;
-                    
-                    // Check if user is admin
-                    if (userData.isAdmin) {
-                        setAdminStatus(true);
+                    // Update UI with user data
+                    if (userData.isVerified) {
+                        userPermissions.isVerified = true;
                     }
                 }
+                
             } catch (error) {
                 console.error('Error checking user permissions:', error);
             }
@@ -1196,7 +1221,7 @@
         }
 
         function showFullscreenArticle(articleId) {
-            const article = sampleArticles.find(a => a.id === articleId);
+            const article = newsArticles.find(a => a.id === articleId);
             if (!article) return;
             
             currentView = 'article';
@@ -1263,32 +1288,42 @@
         }
 
         // Article functions
-        function loadSampleData() {
-            console.log('Sample data loaded');
-        }
 
         function loadFeaturedArticles() {
-            const featuredArticles = sampleArticles.filter(article => article.featured && article.status === 'published');
+            const featuredArticles = newsArticles.filter(article => article.featured);
             const container = document.getElementById('featuredArticles');
+            
+            if (featuredArticles.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">No featured articles available</div>';
+                return;
+            }
             
             container.innerHTML = featuredArticles.map(article => createArticleCard(article)).join('');
         }
 
         function loadLatestArticles() {
-            const latestArticles = sampleArticles
-                .filter(article => article.status === 'published')
+            const latestArticles = newsArticles
                 .sort((a, b) => new Date(b.date) - new Date(a.date))
                 .slice(0, 6);
             
             const container = document.getElementById('latestArticles');
+            
+            if (latestArticles.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">No articles available</div>';
+                return;
+            }
+            
             container.innerHTML = latestArticles.map(article => createArticleCard(article)).join('');
         }
 
         function loadCategoryArticles(category) {
-            const categoryArticles = sampleArticles.filter(article => 
-                article.category === category && article.status === 'published'
-            );
+            const categoryArticles = newsArticles.filter(article => article.category === category);
             const container = document.getElementById('categoryArticles');
+            
+            if (categoryArticles.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">No articles in this category</div>';
+                return;
+            }
             
             container.innerHTML = categoryArticles.map(article => createArticleCard(article)).join('');
         }
@@ -1408,34 +1443,36 @@
                 return;
             }
             
-            // Simulate successful request submission (since we're using sample data)
             try {
-                // Add to local sample data for demonstration
-                const newRequest = {
-                    id: Date.now().toString(),
+                showLoading();
+                
+                const requestData = {
                     userId: currentUser.uid,
-                    userEmail: currentUser.email || 'user@example.com',
+                    userEmail: currentUser.email,
+                    userDisplayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Anonymous',
                     type: type,
                     status: 'pending',
-                    requestDate: new Date().toISOString(),
+                    requestDate: firebase.firestore.FieldValue.serverTimestamp(),
                     message: `User requesting ${type} permission`
                 };
                 
-                // Store in localStorage for persistence during demo
-                const existingRequests = JSON.parse(localStorage.getItem('userRequests') || '[]');
-                existingRequests.push(newRequest);
-                localStorage.setItem('userRequests', JSON.stringify(existingRequests));
+                // Add to pendingArticles collection (or create a separate requests collection)
+                await db.collection('pendingArticles').add({
+                    ...requestData,
+                    title: `Permission Request: ${type}`,
+                    category: 'system',
+                    summary: `Permission request from ${requestData.userDisplayName}`,
+                    content: requestData.message,
+                    isPermissionRequest: true
+                });
                 
                 showCustomAlert('Permission request submitted successfully! An admin will review your request.', 'success');
-                
-                // Update admin notification if admin is logged in
-                if (isAdmin) {
-                    updateAdminNotifications();
-                }
+                hideLoading();
                 
             } catch (error) {
                 console.error('Error submitting request:', error);
                 showCustomAlert('Request submission failed. Please try again later.', 'error');
+                hideLoading();
             }
         }
 
@@ -1444,7 +1481,7 @@
             e.preventDefault();
             
             if (!currentUser || !userPermissions.canCreateArticles) {
-                alert('You do not have permission to create articles');
+                showCustomAlert('You do not have permission to create articles', 'warning');
                 return;
             }
             
@@ -1467,7 +1504,7 @@
                 slug,
                 author: currentUser.displayName || currentUser.email?.split('@')[0] || 'Anonymous',
                 authorId: currentUser.uid,
-                date: new Date().toISOString(),
+                date: firebase.firestore.FieldValue.serverTimestamp(),
                 status: 'pending',
                 featured: false,
                 breaking: false,
@@ -1475,13 +1512,16 @@
             };
             
             try {
-                await db.collection('articles').add(articleData);
-                alert('Article submitted for review! An admin will review and publish it.');
+                showLoading();
+                await db.collection('pendingArticles').add(articleData);
+                showCustomAlert('Article submitted for review! An admin will review and publish it.', 'success');
                 document.getElementById('createArticleForm').reset();
                 showHome();
+                hideLoading();
             } catch (error) {
                 console.error('Error submitting article:', error);
-                alert('Error submitting article. Please try again.');
+                showCustomAlert('Error submitting article. Please try again.', 'error');
+                hideLoading();
             }
         });
 
@@ -1526,71 +1566,101 @@
             }
         }
 
-        function loadAdminData() {
-            document.getElementById('totalArticles').textContent = sampleArticles.length;
-            document.getElementById('totalUsers').textContent = sampleUsers.length;
-            document.getElementById('pendingArticles').textContent = sampleArticles.filter(a => a.status === 'pending').length;
+        async function loadAdminData() {
+            try {
+                // Load all articles (published and pending)
+                const allArticlesSnapshot = await db.collection('news').get();
+                const allArticles = allArticlesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                const pendingSnapshot = await db.collection('pendingArticles').get();
+                const pendingArticles = pendingSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                document.getElementById('totalArticles').textContent = allArticles.length;
+                document.getElementById('totalUsers').textContent = allUsers.length;
+                document.getElementById('pendingArticles').textContent = pendingArticles.length;
+                
+            } catch (error) {
+                console.error('Error loading admin data:', error);
+            }
         }
 
-        function loadAdminArticles() {
-            const tbody = document.getElementById('adminArticlesTable');
-            tbody.innerHTML = sampleArticles.map(article => `
-                <tr>
-                    <td class="px-6 py-4">
-                        <div class="font-medium text-gray-900">${article.title}</div>
-                        <div class="text-sm text-gray-500">${article.category}</div>
-                    </td>
-                    <td class="px-6 py-4 text-sm text-gray-900">${article.author}</td>
-                    <td class="px-6 py-4">
-                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(article.status)}">
-                            ${article.status}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-sm text-gray-900">${new Date(article.date).toLocaleDateString()}</td>
-                    <td class="px-6 py-4 text-sm space-x-2">
-                        <button onclick="approveArticle('${article.id}')" class="text-green-600 hover:text-green-800" title="Approve">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        <button onclick="editAdminArticle('${article.id}')" class="text-blue-600 hover:text-blue-800" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteAdminArticle('${article.id}')" class="text-red-600 hover:text-red-800" title="Delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        <button onclick="toggleFeatured('${article.id}')" class="text-yellow-600 hover:text-yellow-800" title="Toggle Featured">
-                            <i class="fas fa-star"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+        async function loadAdminArticles() {
+            try {
+                // Load both published and pending articles
+                const publishedSnapshot = await db.collection('news').get();
+                const pendingSnapshot = await db.collection('pendingArticles').get();
+                
+                const allArticles = [
+                    ...publishedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), collection: 'news' })),
+                    ...pendingSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), collection: 'pendingArticles' }))
+                ];
+                
+                const tbody = document.getElementById('adminArticlesTable');
+                tbody.innerHTML = allArticles.map(article => `
+                    <tr>
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-gray-900">${article.title}</div>
+                            <div class="text-sm text-gray-500">${article.category}</div>
+                            ${article.isPermissionRequest ? '<span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Permission Request</span>' : ''}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${article.author || 'System'}</td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(article.status || 'pending')}">
+                                ${article.status || 'pending'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${article.date ? new Date(article.date.toDate ? article.date.toDate() : article.date).toLocaleDateString() : 'N/A'}</td>
+                        <td class="px-6 py-4 text-sm space-x-2">
+                            ${!article.isPermissionRequest ? `
+                                <button onclick="approveArticle('${article.id}', '${article.collection}')" class="text-green-600 hover:text-green-800" title="Approve">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button onclick="toggleFeatured('${article.id}', '${article.collection}')" class="text-yellow-600 hover:text-yellow-800" title="Toggle Featured">
+                                    <i class="fas fa-star"></i>
+                                </button>
+                            ` : `
+                                <button onclick="approvePermissionRequest('${article.id}', '${article.userId}', '${article.type}')" class="text-green-600 hover:text-green-800" title="Grant Permission">
+                                    <i class="fas fa-user-check"></i>
+                                </button>
+                            `}
+                            <button onclick="deleteAdminArticle('${article.id}', '${article.collection}')" class="text-red-600 hover:text-red-800" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading admin articles:', error);
+            }
         }
 
         function loadAdminUsers() {
             const tbody = document.getElementById('usersTable');
-            tbody.innerHTML = sampleUsers.map(user => `
+            tbody.innerHTML = allUsers.map(user => `
                 <tr>
                     <td class="px-6 py-4">
                         <div class="flex items-center">
                             <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
-                                ${user.displayName.charAt(0).toUpperCase()}
+                                ${user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
                             </div>
                             <div>
-                                <div class="font-medium text-gray-900">${user.displayName}</div>
+                                <div class="font-medium text-gray-900">${user.displayName || 'Anonymous'}</div>
                                 <div class="text-sm text-gray-500">${user.email}</div>
                             </div>
                         </div>
                     </td>
                     <td class="px-6 py-4 text-sm">
-                        <span class="user-score">${user.score}</span>
+                        <span class="user-score">${user.score || 100}</span>
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center">
-                            <span class="status-indicator status-${user.status}"></span>
-                            <span class="text-sm">${user.status}</span>
+                            <span class="status-indicator status-${user.status || 'active'}"></span>
+                            <span class="text-sm">${user.status || 'active'}</span>
                             ${user.isVerified ? '<i class="fas fa-check-circle text-blue-500 ml-2"></i>' : ''}
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-900">${new Date(user.joinDate).toLocaleDateString()}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${user.joinDate ? new Date(user.joinDate.toDate ? user.joinDate.toDate() : user.joinDate).toLocaleDateString() : 'N/A'}</td>
                     <td class="px-6 py-4 text-sm space-x-2">
                         <button onclick="toggleUserVerification('${user.id}')" class="text-blue-600 hover:text-blue-800" title="Toggle Verification">
                             <i class="fas fa-check-circle"></i>
@@ -1696,99 +1766,244 @@
         }
 
         // Admin action functions
-        function approveArticle(articleId) {
+        async function approveArticle(articleId, collection) {
             showConfirmDialog(
                 'Approve Article',
                 'Are you sure you want to approve and publish this article?',
-                () => {
-                    const article = sampleArticles.find(a => a.id === articleId);
-                    if (article) {
-                        article.status = 'published';
+                async () => {
+                    try {
+                        showLoading();
+                        
+                        if (collection === 'pendingArticles') {
+                            // Move from pending to published
+                            const pendingDoc = await db.collection('pendingArticles').doc(articleId).get();
+                            if (pendingDoc.exists) {
+                                const articleData = pendingDoc.data();
+                                
+                                // Add to news collection
+                                await db.collection('news').add({
+                                    ...articleData,
+                                    status: 'published',
+                                    publishedDate: firebase.firestore.FieldValue.serverTimestamp()
+                                });
+                                
+                                // Remove from pending
+                                await db.collection('pendingArticles').doc(articleId).delete();
+                            }
+                        } else {
+                            // Update existing article
+                            await db.collection('news').doc(articleId).update({
+                                status: 'published',
+                                publishedDate: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                        }
+                        
+                        // Refresh data
+                        await loadFirestoreData();
                         loadAdminArticles();
-                        loadFeaturedArticles();
-                        loadLatestArticles();
                         showCustomAlert('Article approved and published successfully!', 'success');
+                        hideLoading();
+                        
+                    } catch (error) {
+                        console.error('Error approving article:', error);
+                        showCustomAlert('Error approving article. Please try again.', 'error');
+                        hideLoading();
                     }
                 }
             );
         }
 
-        function toggleFeatured(articleId) {
-            const article = sampleArticles.find(a => a.id === articleId);
-            if (article) {
-                article.featured = !article.featured;
-                loadAdminArticles();
-                loadFeaturedArticles();
-                showCustomAlert(`Article ${article.featured ? 'featured' : 'unfeatured'} successfully!`, 'success');
+        async function toggleFeatured(articleId, collection) {
+            try {
+                showLoading();
+                
+                const docRef = db.collection(collection).doc(articleId);
+                const doc = await docRef.get();
+                
+                if (doc.exists) {
+                    const currentFeatured = doc.data().featured || false;
+                    await docRef.update({
+                        featured: !currentFeatured
+                    });
+                    
+                    // Refresh data
+                    await loadFirestoreData();
+                    loadAdminArticles();
+                    showCustomAlert(`Article ${!currentFeatured ? 'featured' : 'unfeatured'} successfully!`, 'success');
+                }
+                
+                hideLoading();
+                
+            } catch (error) {
+                console.error('Error toggling featured status:', error);
+                showCustomAlert('Error updating article. Please try again.', 'error');
+                hideLoading();
             }
         }
 
-        function deleteAdminArticle(articleId) {
+        async function deleteAdminArticle(articleId, collection) {
             showConfirmDialog(
                 'Delete Article',
                 'Are you sure you want to permanently delete this article? This action cannot be undone.',
-                () => {
-                    const index = sampleArticles.findIndex(a => a.id === articleId);
-                    if (index > -1) {
-                        sampleArticles.splice(index, 1);
+                async () => {
+                    try {
+                        showLoading();
+                        
+                        await db.collection(collection).doc(articleId).delete();
+                        
+                        // Refresh data
+                        await loadFirestoreData();
                         loadAdminArticles();
-                        loadFeaturedArticles();
-                        loadLatestArticles();
                         showCustomAlert('Article deleted successfully!', 'success');
+                        hideLoading();
+                        
+                    } catch (error) {
+                        console.error('Error deleting article:', error);
+                        showCustomAlert('Error deleting article. Please try again.', 'error');
+                        hideLoading();
                     }
                 },
                 'danger'
             );
         }
 
-        function toggleUserVerification(userId) {
-            const user = sampleUsers.find(u => u.id === userId);
+        async function approvePermissionRequest(requestId, userId, permissionType) {
+            showConfirmDialog(
+                'Grant Permission',
+                `Grant ${permissionType} permission to this user?`,
+                async () => {
+                    try {
+                        showLoading();
+                        
+                        // Update user permissions
+                        const permissionUpdate = {};
+                        if (permissionType === 'create') {
+                            permissionUpdate.canCreateArticles = true;
+                        } else if (permissionType === 'edit') {
+                            permissionUpdate.canEditArticles = true;
+                        }
+                        
+                        await db.collection('permissions').doc(userId).update(permissionUpdate);
+                        
+                        // Delete the request
+                        await db.collection('pendingArticles').doc(requestId).delete();
+                        
+                        loadAdminArticles();
+                        showCustomAlert('Permission granted successfully!', 'success');
+                        hideLoading();
+                        
+                    } catch (error) {
+                        console.error('Error granting permission:', error);
+                        showCustomAlert('Error granting permission. Please try again.', 'error');
+                        hideLoading();
+                    }
+                }
+            );
+        }
+
+        async function toggleUserVerification(userId) {
+            const user = allUsers.find(u => u.id === userId);
             if (user) {
                 const action = user.isVerified ? 'remove verification from' : 'verify';
                 showConfirmDialog(
                     'Toggle User Verification',
                     `Are you sure you want to ${action} this user?`,
-                    () => {
-                        user.isVerified = !user.isVerified;
-                        loadAdminUsers();
-                        showCustomAlert(`User ${user.isVerified ? 'verified' : 'unverified'} successfully!`, 'success');
+                    async () => {
+                        try {
+                            showLoading();
+                            
+                            await db.collection('users').doc(userId).update({
+                                isVerified: !user.isVerified
+                            });
+                            
+                            // Update local data
+                            user.isVerified = !user.isVerified;
+                            loadAdminUsers();
+                            showCustomAlert(`User ${user.isVerified ? 'verified' : 'unverified'} successfully!`, 'success');
+                            hideLoading();
+                            
+                        } catch (error) {
+                            console.error('Error updating user verification:', error);
+                            showCustomAlert('Error updating user. Please try again.', 'error');
+                            hideLoading();
+                        }
                     }
                 );
             }
         }
 
-        function suspendUser(userId) {
-            const user = sampleUsers.find(u => u.id === userId);
+        async function suspendUser(userId) {
+            const user = allUsers.find(u => u.id === userId);
             if (user) {
                 const action = user.status === 'suspended' ? 'reactivate' : 'suspend';
                 showConfirmDialog(
                     `${action.charAt(0).toUpperCase() + action.slice(1)} User`,
                     `Are you sure you want to ${action} this user?`,
-                    () => {
-                        user.status = user.status === 'suspended' ? 'active' : 'suspended';
-                        loadAdminUsers();
-                        showCustomAlert(`User ${user.status === 'suspended' ? 'suspended' : 'reactivated'} successfully!`, 'success');
+                    async () => {
+                        try {
+                            showLoading();
+                            
+                            const newStatus = user.status === 'suspended' ? 'active' : 'suspended';
+                            
+                            await db.collection('users').doc(userId).update({
+                                status: newStatus
+                            });
+                            
+                            // Also update permissions to suspend access
+                            if (newStatus === 'suspended') {
+                                await db.collection('permissions').doc(userId).update({
+                                    isSuspended: true
+                                });
+                            } else {
+                                await db.collection('permissions').doc(userId).update({
+                                    isSuspended: false
+                                });
+                            }
+                            
+                            // Update local data
+                            user.status = newStatus;
+                            loadAdminUsers();
+                            showCustomAlert(`User ${newStatus === 'suspended' ? 'suspended' : 'reactivated'} successfully!`, 'success');
+                            hideLoading();
+                            
+                        } catch (error) {
+                            console.error('Error updating user status:', error);
+                            showCustomAlert('Error updating user. Please try again.', 'error');
+                            hideLoading();
+                        }
                     },
                     user.status === 'suspended' ? 'question' : 'warning'
                 );
             }
         }
 
-        function grantPermission(userId, permission) {
-            const user = sampleUsers.find(u => u.id === userId);
-            if (user) {
-                showConfirmDialog(
-                    'Grant Permission',
-                    `Grant ${permission} permission to this user?`,
-                    () => {
+        async function grantPermission(userId, permission) {
+            showConfirmDialog(
+                'Grant Permission',
+                `Grant ${permission} permission to this user?`,
+                async () => {
+                    try {
+                        showLoading();
+                        
+                        const permissionUpdate = {};
                         if (permission === 'create') {
-                            user.permissions.canCreateArticles = true;
+                            permissionUpdate.canCreateArticles = true;
+                        } else if (permission === 'edit') {
+                            permissionUpdate.canEditArticles = true;
                         }
-                        loadAdminUsers();
+                        
+                        await db.collection('permissions').doc(userId).update(permissionUpdate);
+                        
                         showCustomAlert('Permission granted successfully!', 'success');
+                        hideLoading();
+                        
+                    } catch (error) {
+                        console.error('Error granting permission:', error);
+                        showCustomAlert('Error granting permission. Please try again.', 'error');
+                        hideLoading();
                     }
-                );
-            }
+                }
+            );
         }
 
         function approveRequest(requestId) {
@@ -2030,5 +2245,5 @@
             lastTouchEnd = now;
         }, false);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96d51585713b599a',t:'MTc1NDg4NzUzMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96d51a11107f54da',t:'MTc1NDg4NzcxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
