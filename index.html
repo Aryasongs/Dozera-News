@@ -229,6 +229,90 @@
         </div>
     </footer>
 
+    <!-- Full Screen Article View -->
+    <div id="article-view" class="fixed inset-0 bg-gray-50 z-50 hidden overflow-y-auto">
+        <!-- Article Header -->
+        <div class="bg-white border-b-2 border-black sticky top-0 z-10">
+            <div class="max-w-6xl mx-auto px-4 py-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-4">
+                        <button onclick="closeArticleView()" class="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-100">
+                            <i class="fas fa-arrow-left text-xl"></i>
+                        </button>
+                        <div class="font-headline text-2xl font-black text-black">Dozera News</div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="shareArticle()" class="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-100">
+                            <i class="fas fa-share text-lg"></i>
+                        </button>
+                        <button onclick="bookmarkArticle()" class="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-100">
+                            <i class="fas fa-bookmark text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Article Content -->
+        <div class="max-w-4xl mx-auto px-4 py-8">
+            <article class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <!-- Article Header -->
+                <div class="p-8 pb-6">
+                    <div class="mb-4">
+                        <span id="article-category" class="px-3 py-1 text-xs font-bold text-white rounded uppercase bg-blue-600">Category</span>
+                    </div>
+                    <h1 id="article-title" class="font-headline text-4xl lg:text-5xl font-bold text-black mb-6 leading-tight">Article Title</h1>
+                    <p id="article-summary" class="text-xl text-gray-700 mb-6 leading-relaxed font-medium">Article summary will appear here...</p>
+                    
+                    <!-- Article Meta -->
+                    <div class="flex items-center justify-between py-4 border-t border-b border-gray-200">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center">
+                                <div id="article-author-avatar" class="h-12 w-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold mr-3">A</div>
+                                <div>
+                                    <p class="font-semibold text-gray-900" id="article-author">Author Name</p>
+                                    <p class="text-sm text-gray-600" id="article-date">Date</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-6 text-sm text-gray-600">
+                            <span id="article-read-time">5 min read</span>
+                            <span id="article-views">1,234 views</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Article Image (if exists) -->
+                <div id="article-image-container" class="hidden">
+                    <img id="article-image" src="" alt="" class="w-full h-96 object-cover">
+                </div>
+
+                <!-- Article Body -->
+                <div class="p-8 pt-6">
+                    <div id="article-content" class="prose prose-lg max-w-none">
+                        <!-- Article content will be loaded here -->
+                    </div>
+                    
+                    <!-- Article Tags -->
+                    <div id="article-tags-container" class="mt-8 pt-6 border-t border-gray-200">
+                        <h4 class="text-sm font-semibold text-gray-900 mb-3">Tags</h4>
+                        <div id="article-tags" class="flex flex-wrap gap-2">
+                            <!-- Tags will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Related Articles -->
+            <div class="mt-8">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6">Related Articles</h3>
+                <div id="related-articles" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Related articles will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Static Pages -->
     <div id="page-overlay" class="fixed inset-0 bg-gray-100 z-50 hidden overflow-y-auto">
         <!-- Page Header -->
@@ -1125,32 +1209,108 @@
         let secretTimeout = null;
         let userArticles = [];
         let allArticles = [];
+        let currentRoute = null;
 
         // Sample data
         const sampleNews = [
             {
                 id: '1',
-                title: 'NYC Mayor Announces New Infrastructure Plan',
-                summary: 'A comprehensive $50 billion plan to modernize New York City\'s infrastructure over the next decade.',
-                content: 'New York City Mayor announced today a groundbreaking infrastructure plan that will transform the city\'s transportation, utilities, and digital infrastructure. The plan includes upgrades to the subway system, expansion of bike lanes, and citywide fiber optic installation.',
+                title: 'NYC Mayor Announces Comprehensive Infrastructure Overhaul',
+                summary: 'A groundbreaking $50 billion initiative promises to transform New York City\'s aging infrastructure, focusing on transportation, utilities, and digital connectivity for the next decade.',
+                content: `New York City Mayor announced today a groundbreaking infrastructure plan that will transform the city's transportation, utilities, and digital infrastructure over the next decade.
+
+The comprehensive $50 billion initiative represents the largest infrastructure investment in the city's modern history, addressing decades of deferred maintenance and preparing New York for the challenges of the 21st century.
+
+"This is not just about fixing what's broken," the Mayor said during a press conference at City Hall. "This is about building the foundation for New York's next chapter of growth and prosperity."
+
+The plan encompasses several key areas:
+
+**Transportation Modernization**
+The subway system will receive $20 billion in upgrades, including new signal systems, accessibility improvements, and the addition of three new lines connecting underserved neighborhoods to Manhattan's business districts.
+
+**Digital Infrastructure**
+A citywide fiber optic network will be installed, providing high-speed internet access to all five boroughs. This $8 billion investment aims to bridge the digital divide and support the city's growing tech sector.
+
+**Sustainable Energy**
+The initiative includes $12 billion for renewable energy projects, including solar panel installations on public buildings and the development of offshore wind farms.
+
+**Water and Waste Management**
+Aging water mains and sewage systems will be replaced with modern, climate-resilient infrastructure designed to handle increased storm water from climate change.
+
+The project is expected to create over 200,000 jobs over the next decade and will be funded through a combination of federal grants, municipal bonds, and public-private partnerships.
+
+Construction is set to begin in early 2025, with the first phase focusing on the most critical transportation and utility upgrades.`,
                 category: 'politics',
                 author: 'Sarah Johnson',
                 authorId: 'admin',
                 date: new Date().toISOString(),
                 status: 'published',
-                tags: ['infrastructure', 'nyc', 'politics']
+                tags: ['infrastructure', 'nyc', 'politics', 'transportation']
             },
             {
                 id: '2',
-                title: 'Wall Street Sees Record Trading Volume',
-                summary: 'Stock exchanges report highest daily trading volume in five years amid market volatility.',
-                content: 'Wall Street experienced unprecedented trading activity today as investors responded to new economic indicators. The NYSE and NASDAQ both reported record-breaking volumes, with technology stocks leading the surge.',
+                title: 'Wall Street Reaches New Heights as Trading Volume Soars',
+                summary: 'Stock exchanges report highest daily trading volume in five years amid market volatility, with technology stocks leading unprecedented surge.',
+                content: `Wall Street experienced unprecedented trading activity today as investors responded to new economic indicators and corporate earnings reports that exceeded expectations across multiple sectors.
+
+The New York Stock Exchange and NASDAQ both reported record-breaking volumes, with over 15 billion shares changing hands – the highest single-day total since the market volatility of early 2020.
+
+**Technology Leads the Charge**
+Technology stocks were the primary drivers of today's surge, with major companies posting gains of 5-8%. The sector's performance was bolstered by strong quarterly earnings and optimistic guidance for the coming year.
+
+"We're seeing a perfect storm of positive factors," said Maria Rodriguez, chief market strategist at Goldman Sachs. "Strong corporate earnings, improving economic indicators, and renewed investor confidence are all contributing to this rally."
+
+**Market Indicators**
+The S&P 500 closed up 3.2%, while the Dow Jones Industrial Average gained 2.8%. The tech-heavy NASDAQ saw the largest gains, rising 4.1% to close at a new all-time high.
+
+**Economic Outlook**
+Recent economic data has shown continued strength in employment, with unemployment remaining near historic lows. Consumer spending has also remained robust, despite concerns about inflation.
+
+**Investor Sentiment**
+The VIX, often called the "fear index," dropped to its lowest level in six months, indicating reduced market anxiety among investors.
+
+**Looking Ahead**
+Analysts remain cautiously optimistic about the market's near-term prospects, though they warn that geopolitical tensions and potential interest rate changes could introduce volatility.
+
+The Federal Reserve's next meeting is scheduled for next month, where officials will review current monetary policy in light of recent economic developments.`,
                 category: 'business',
                 author: 'Michael Chen',
                 authorId: 'admin',
                 date: new Date(Date.now() - 86400000).toISOString(),
                 status: 'published',
-                tags: ['wall street', 'trading', 'stocks']
+                tags: ['wall street', 'trading', 'stocks', 'economy']
+            },
+            {
+                id: '3',
+                title: 'Yankees Clinch Division Title in Dramatic Fashion',
+                summary: 'Dominant performance secures playoff berth for the Bronx Bombers in a thrilling 9-7 victory over their division rivals.',
+                content: `The New York Yankees secured their division title last night in dramatic fashion, defeating their longtime rivals 9-7 in a game that will be remembered as one of the season's most exciting contests.
+
+**The Turning Point**
+With the Yankees trailing 7-5 entering the bottom of the ninth inning, the team mounted a spectacular comeback that had the 50,000 fans at Yankee Stadium on their feet.
+
+Aaron Judge led off the inning with a towering home run to right field, his 45th of the season, cutting the deficit to one run. Two batters later, Gleyber Torres delivered the game-winning hit – a two-run double that sent the stadium into pandemonium.
+
+**Season Highlights**
+This division title marks the Yankees' first since 2019 and caps off a remarkable season that saw the team overcome early-season struggles to dominate the second half.
+
+The team's 95-67 record represents a significant improvement from last year's disappointing campaign. Key contributions came from both veteran leaders and emerging young talent.
+
+**Playoff Implications**
+With the division title secured, the Yankees will enter the playoffs as the American League's second seed, earning them home-field advantage in the first round.
+
+Manager Aaron Boone praised his team's resilience: "This group never gave up, even when things looked bleak early in the season. They believed in each other and in our system."
+
+**Looking to October**
+The Yankees will now turn their attention to the playoffs, where they'll face the winner of the wild-card series. The team's combination of power hitting and improved pitching makes them a formidable opponent for any team.
+
+The last time the Yankees won a division title, they went on to reach the American League Championship Series. Fans are hoping this year's team can go even further and bring home the franchise's 28th World Series championship.`,
+                category: 'sports',
+                author: 'David Rodriguez',
+                authorId: 'admin',
+                date: new Date(Date.now() - 172800000).toISOString(),
+                status: 'published',
+                tags: ['yankees', 'baseball', 'playoffs', 'sports']
             }
         ];
 
@@ -1159,7 +1319,59 @@
             updateCurrentDate();
             loadNews();
             setupAuthStateListener();
+            setupRouting();
         });
+
+        // URL Routing System
+        function setupRouting() {
+            // Handle initial route
+            handleRoute();
+            
+            // Listen for hash changes
+            window.addEventListener('hashchange', handleRoute);
+            
+            // Listen for back/forward buttons
+            window.addEventListener('popstate', handleRoute);
+        }
+
+        function handleRoute() {
+            const hash = window.location.hash;
+            
+            if (hash.startsWith('#/article/')) {
+                const articleSlug = hash.replace('#/article/', '');
+                showArticleBySlug(articleSlug);
+            } else {
+                // Default route - show main page
+                hideArticleView();
+            }
+        }
+
+        function createArticleSlug(title) {
+            return title
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+                .replace(/\s+/g, '-') // Replace spaces with hyphens
+                .replace(/-+/g, '-') // Replace multiple hyphens with single
+                .trim('-'); // Remove leading/trailing hyphens
+        }
+
+        function showArticleBySlug(slug) {
+            // Find article by slug
+            const publishedArticles = [...sampleNews, ...allArticles.filter(a => a.status === 'published')];
+            const article = publishedArticles.find(a => createArticleSlug(a.title) === slug);
+            
+            if (article) {
+                showFullScreenArticle(article);
+            } else {
+                // Article not found, redirect to home
+                window.location.hash = '';
+            }
+        }
+
+        function navigateToArticle(article) {
+            const slug = createArticleSlug(article.title);
+            window.location.hash = `#/article/${slug}`;
+        }
 
         // Update current date
         function updateCurrentDate() {
@@ -1800,7 +2012,7 @@
                 </div>
             `;
             
-            card.addEventListener('click', () => showArticleDetail(article));
+            card.addEventListener('click', () => navigateToArticle(article));
             return card;
         }
 
@@ -1817,35 +2029,207 @@
             });
         }
 
-        function showArticleDetail(article) {
-            // Create a modal or navigate to article detail page
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
-            modal.innerHTML = `
-                <div class="bg-white rounded-lg max-w-4xl w-full max-h-screen overflow-y-auto">
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
-                            <div>
-                                <span class="px-3 py-1 text-xs font-bold text-white rounded uppercase category-${article.category}">
-                                    ${article.category}
-                                </span>
-                                <h1 class="font-headline text-3xl font-bold text-black mt-4 mb-2">${article.title}</h1>
-                                <div class="article-meta">
-                                    <span>By <strong>${article.author}</strong> • ${new Date(article.date).toLocaleDateString()} • 5 min read</span>
-                                </div>
-                            </div>
-                            <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
-                                <i class="fas fa-times text-2xl"></i>
-                            </button>
+        function showFullScreenArticle(article) {
+            // Hide main content
+            document.querySelector('main').style.display = 'none';
+            document.querySelector('nav').style.display = 'none';
+            
+            // Show article view
+            document.getElementById('article-view').classList.remove('hidden');
+            
+            // Populate article data
+            const categoryColors = {
+                politics: 'bg-blue-600',
+                business: 'bg-green-600',
+                sports: 'bg-yellow-600',
+                local: 'bg-purple-600',
+                opinion: 'bg-gray-600',
+                breaking: 'bg-red-600'
+            };
+            
+            document.getElementById('article-category').textContent = article.category.toUpperCase();
+            document.getElementById('article-category').className = `px-3 py-1 text-xs font-bold text-white rounded uppercase ${categoryColors[article.category] || 'bg-gray-600'}`;
+            
+            document.getElementById('article-title').textContent = article.title;
+            document.getElementById('article-summary').textContent = article.summary;
+            document.getElementById('article-author').textContent = article.author;
+            document.getElementById('article-date').textContent = new Date(article.date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            // Set author avatar
+            const authorInitials = article.author.split(' ').map(name => name[0]).join('').toUpperCase();
+            document.getElementById('article-author-avatar').textContent = authorInitials;
+            
+            // Calculate read time (rough estimate: 200 words per minute)
+            const wordCount = article.content.split(' ').length;
+            const readTime = Math.ceil(wordCount / 200);
+            document.getElementById('article-read-time').textContent = `${readTime} min read`;
+            
+            // Set random view count for demo
+            const viewCount = Math.floor(Math.random() * 5000) + 100;
+            document.getElementById('article-views').textContent = `${viewCount.toLocaleString()} views`;
+            
+            // Set article content with proper formatting
+            let formattedContent = article.content
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold text
+                .replace(/\n\n/g, '</p><p>') // Paragraph breaks
+                .replace(/\n/g, '<br>'); // Line breaks
+            
+            document.getElementById('article-content').innerHTML = `<p>${formattedContent}</p>`;
+            
+            // Handle article image if exists
+            if (article.image) {
+                document.getElementById('article-image').src = article.image;
+                document.getElementById('article-image').alt = article.title;
+                document.getElementById('article-image-container').classList.remove('hidden');
+            } else {
+                document.getElementById('article-image-container').classList.add('hidden');
+            }
+            
+            // Handle tags
+            if (article.tags && article.tags.length > 0) {
+                const tagsContainer = document.getElementById('article-tags');
+                tagsContainer.innerHTML = '';
+                article.tags.forEach(tag => {
+                    const tagElement = document.createElement('span');
+                    tagElement.className = 'px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-gray-200 cursor-pointer';
+                    tagElement.textContent = tag;
+                    tagsContainer.appendChild(tagElement);
+                });
+                document.getElementById('article-tags-container').classList.remove('hidden');
+            } else {
+                document.getElementById('article-tags-container').classList.add('hidden');
+            }
+            
+            // Load related articles
+            loadRelatedArticles(article);
+            
+            // Update page title
+            document.title = `${article.title} - Dozera News`;
+        }
+
+        function hideArticleView() {
+            document.getElementById('article-view').classList.add('hidden');
+            document.querySelector('main').style.display = 'block';
+            document.querySelector('nav').style.display = 'block';
+            document.title = 'Dozera News - New York\'s Premier News Source';
+        }
+
+        function closeArticleView() {
+            window.location.hash = '';
+        }
+
+        function loadRelatedArticles(currentArticle) {
+            const publishedArticles = [...sampleNews, ...allArticles.filter(a => a.status === 'published')];
+            
+            // Find related articles (same category, excluding current article)
+            let relatedArticles = publishedArticles.filter(article => 
+                article.id !== currentArticle.id && 
+                article.category === currentArticle.category
+            );
+            
+            // If not enough related articles, add from other categories
+            if (relatedArticles.length < 3) {
+                const otherArticles = publishedArticles.filter(article => 
+                    article.id !== currentArticle.id && 
+                    article.category !== currentArticle.category
+                );
+                relatedArticles = [...relatedArticles, ...otherArticles];
+            }
+            
+            // Limit to 3 articles
+            relatedArticles = relatedArticles.slice(0, 3);
+            
+            const container = document.getElementById('related-articles');
+            container.innerHTML = '';
+            
+            relatedArticles.forEach(article => {
+                const articleCard = document.createElement('div');
+                articleCard.className = 'bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 cursor-pointer';
+                
+                const categoryColors = {
+                    politics: 'bg-blue-600',
+                    business: 'bg-green-600',
+                    sports: 'bg-yellow-600',
+                    local: 'bg-purple-600',
+                    opinion: 'bg-gray-600'
+                };
+                
+                articleCard.innerHTML = `
+                    <div class="p-6">
+                        <div class="mb-3">
+                            <span class="px-2 py-1 text-xs font-bold text-white rounded uppercase ${categoryColors[article.category] || 'bg-gray-600'}">
+                                ${article.category}
+                            </span>
                         </div>
-                        <div class="prose max-w-none">
-                            <p class="text-lg text-gray-700 mb-6 leading-relaxed font-medium">${article.summary}</p>
-                            <div class="text-gray-800 leading-relaxed whitespace-pre-line">${article.content}</div>
+                        <h3 class="font-headline text-lg font-bold text-black mb-2 leading-tight hover:text-red-600">${article.title}</h3>
+                        <p class="text-gray-600 text-sm mb-3 leading-relaxed">${article.summary.substring(0, 120)}...</p>
+                        <div class="text-xs text-gray-500">
+                            <span>By <strong>${article.author}</strong></span>
+                            <span class="mx-1">•</span>
+                            <span>${new Date(article.date).toLocaleDateString()}</span>
                         </div>
                     </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
+                `;
+                
+                articleCard.addEventListener('click', () => navigateToArticle(article));
+                container.appendChild(articleCard);
+            });
+        }
+
+        function shareArticle() {
+            const currentUrl = window.location.href;
+            const title = document.getElementById('article-title').textContent;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    url: currentUrl
+                }).catch(console.error);
+            } else {
+                // Fallback: copy to clipboard
+                navigator.clipboard.writeText(currentUrl).then(() => {
+                    alert('Article URL copied to clipboard!');
+                }).catch(() => {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = currentUrl;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert('Article URL copied to clipboard!');
+                });
+            }
+        }
+
+        function bookmarkArticle() {
+            const title = document.getElementById('article-title').textContent;
+            const url = window.location.href;
+            
+            // Store bookmark in localStorage (in real app, save to user account)
+            let bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
+            
+            const bookmark = {
+                title: title,
+                url: url,
+                date: new Date().toISOString()
+            };
+            
+            // Check if already bookmarked
+            const existingIndex = bookmarks.findIndex(b => b.url === url);
+            if (existingIndex > -1) {
+                bookmarks.splice(existingIndex, 1);
+                alert('Bookmark removed!');
+            } else {
+                bookmarks.unshift(bookmark);
+                alert('Article bookmarked!');
+            }
+            
+            localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
         }
 
         // Initialize with sample data
@@ -2321,5 +2705,5 @@
             document.getElementById('page-overlay').classList.add('hidden');
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96d4da96a14d5a0b',t:'MTc1NDg4NTExOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96d4e04cd091597d',t:'MTc1NDg4NTM1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
